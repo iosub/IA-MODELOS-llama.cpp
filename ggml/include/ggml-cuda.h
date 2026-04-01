@@ -41,6 +41,9 @@ GGML_BACKEND_API bool ggml_backend_cuda_register_host_buffer(void * buffer, size
 GGML_BACKEND_API void ggml_backend_cuda_unregister_host_buffer(void * buffer);
 
 GGML_BACKEND_API ggml_backend_reg_t ggml_backend_cuda_reg(void);
+GGML_BACKEND_API const float * ggml_backend_cuda_turbo_innerq_scale_inv_host(void);
+GGML_BACKEND_API bool          ggml_backend_cuda_turbo_innerq_needs_tensor_update(void);
+GGML_BACKEND_API void          ggml_backend_cuda_turbo_innerq_mark_tensor_updated(void);
 
 #ifdef  __cplusplus
 }

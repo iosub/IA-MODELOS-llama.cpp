@@ -1,4 +1,5 @@
 #include "turbo-innerq.cuh"
+#include "ggml-cuda.h"
 #include <cstring>
 
 // Host-side shared state for InnerQ cross-TU communication
@@ -29,4 +30,16 @@ bool turbo_innerq_needs_tensor_update(void) {
 
 void turbo_innerq_mark_tensor_updated(void) {
     g_innerq_tensor_needs_update = false;
+}
+
+const float * ggml_backend_cuda_turbo_innerq_scale_inv_host(void) {
+    return g_innerq_scale_inv_host;
+}
+
+bool ggml_backend_cuda_turbo_innerq_needs_tensor_update(void) {
+    return turbo_innerq_needs_tensor_update();
+}
+
+void ggml_backend_cuda_turbo_innerq_mark_tensor_updated(void) {
+    turbo_innerq_mark_tensor_updated();
 }

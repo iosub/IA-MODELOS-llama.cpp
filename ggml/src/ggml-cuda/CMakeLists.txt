@@ -256,9 +256,9 @@ if (CUDAToolkit_FOUND)
     if (NOT MSVC)
         list(APPEND CUDA_CXX_FLAGS -Wno-pedantic)
     else()
-        # CCCL 3.2 onwards will require a cpp-standard-compliant preprocessor for MSVC
-        # https://github.com/NVIDIA/cccl/pull/6827
-        list(APPEND CUDA_CXX_FLAGS /Zc:preprocessor)
+        # NVCC-generated stub files currently fail with MSVC's conforming preprocessor
+        # on this toolchain combination (errors in __cudaLaunch macro expansion), so do
+        # not force /Zc:preprocessor for CUDA host compilation on Windows.
     endif()
 
     list(JOIN   CUDA_CXX_FLAGS " " CUDA_CXX_FLAGS_JOINED)  # pass host compiler flags as a single argument

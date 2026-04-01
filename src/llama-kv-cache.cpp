@@ -5,6 +5,10 @@
 #include "llama-model.h"
 #include "llama-context.h"
 
+#ifdef GGML_USE_CUDA
+#include "ggml-cuda.h"
+#endif
+
 #include <algorithm>
 #include <cassert>
 #include <cmath>
@@ -20,16 +24,10 @@
 #define INNERQ_MAX_CHANNELS 128
 #endif
 
-#ifdef GGML_USE_CUDA
-extern bool  g_innerq_finalized;
-extern float g_innerq_scale_inv_host[INNERQ_MAX_CHANNELS];
-extern bool turbo_innerq_needs_tensor_update(void);
-extern void turbo_innerq_mark_tensor_updated(void);
-#else
-static bool  g_innerq_finalized = false;
-static float g_innerq_scale_inv_host[INNERQ_MAX_CHANNELS] = {};
-static bool turbo_innerq_needs_tensor_update(void) { return false; }
-static void turbo_innerq_mark_tensor_updated(void) {}
+#ifndef GGML_USE_CUDA
+static const float * ggml_backend_cuda_turbo_innerq_scale_inv_host(void) { return nullptr; }
+static bool ggml_backend_cuda_turbo_innerq_needs_tensor_update(void) { return false; }
+static void ggml_backend_cuda_turbo_innerq_mark_tensor_updated(void) {}
 #endif
 
 //
@@ -2444,11 +2442,11 @@ bool llama_kv_cache_context::apply() {
     n_kv = kv->get_n_kv(sinfos[i_cur]);
 
     // InnerQ: check if CUDA calibration finalized and tensor needs update
-    if (kv->get_turbo_innerq_scale_inv() != nullptr && turbo_innerq_needs_tensor_update()) {
+    if (kv->get_turbo_innerq_scale_inv() != nullptr && ggml_backend_cuda_turbo_innerq_needs_tensor_update()) {
         ggml_tensor * t = kv->get_turbo_innerq_scale_inv();
         if (t->buffer != nullptr) {
-            ggml_backend_tensor_set(t, g_innerq_scale_inv_host, 0, INNERQ_MAX_CHANNELS * sizeof(float));
-            turbo_innerq_mark_tensor_updated();
+            ggml_backend_tensor_set(t, ggml_backend_cuda_turbo_innerq_scale_inv_host(), 0, INNERQ_MAX_CHANNELS * sizeof(float));
+            ggml_backend_cuda_turbo_innerq_mark_tensor_updated();
             LLAMA_LOG_INFO("%s: InnerQ scale_inv tensor updated\n", __func__);
         }
     }
